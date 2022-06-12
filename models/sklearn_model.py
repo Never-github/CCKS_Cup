@@ -3,11 +3,12 @@ sys.path.append("..")
 from preprocess import PreprocessedData, Data
 from model import Model
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.linear_model import LogisticRegression
 import numpy as np
 from sklearn.metrics import accuracy_score, f1_score, precision_score, recall_score
 
 
-class DecisionTreeModel(Model):
+class sklearnModel(Model):
     def __init__(self, model):
         super().__init__(model)
         self.model: DecisionTreeClassifier = model
@@ -41,7 +42,7 @@ class DecisionTreeModel(Model):
 
 if __name__=="__main__":
     preprocess_data = PreprocessedData(path='../Data/train.json')
-    model = DecisionTreeModel(DecisionTreeClassifier())
+    model = sklearnModel(LogisticRegression())
     model.train(preprocess_data.train_data, preprocess_data.valid_data)
     model.evaluate(preprocess_data.valid_data)
 
