@@ -17,7 +17,7 @@ class Model:
         predictions = []
         for i in range(len(scores)):
             if scores[i]<threshold:
-                predictions.append(-1)
+                predictions.append(0)
             else:
                 predictions.append(1)
         return predictions
