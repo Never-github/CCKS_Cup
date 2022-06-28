@@ -1,3 +1,6 @@
+import json
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+
 def getThreshold(rrank):
     distanceFlagList = rrank
     distanceFlagList = sorted(distanceFlagList, key=lambda sp: sp[0], reverse=False)
@@ -16,3 +19,17 @@ def getThreshold(rrank):
             minValue = currentValue
     # print('threshold... ', threshold)
     return threshold
+
+def transform_prediction_to_json(predictions, urls, output_path='result.txt'):
+    with open(output_path, 'w') as f:
+        for u, p in zip(urls, predictions):
+            dic = {'url': u, 'label': int(p)}
+            json_dic = json.dumps(dic)
+            f.writelines(json_dic+'\n')
+
+def evaluation_func(y_true, y_pred):
+    acc = accuracy_score(y_true, y_pred)
+    p = precision_score(y_true, y_pred)
+    r = recall_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred)
+    print(f"acc {acc} p {p} r {r} f1 {f1}")

@@ -42,7 +42,7 @@ class sklearnModel(Model):
 
 if __name__=="__main__":
     preprocess_data = PreprocessedData(path='../Data/train.json')
-    model = sklearnModel(LogisticRegression())
+    model = sklearnModel(DecisionTreeClassifier)
     model.train(preprocess_data.train_data, preprocess_data.valid_data)
     model.evaluate(preprocess_data.valid_data)
 

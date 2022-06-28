@@ -1,9 +1,10 @@
 #! -*- coding: utf-8 -*-
+import os
 from bert4keras.backend import keras, set_gelu
 from bert4keras.models import build_transformer_model
 import sys
 sys.path.append("..")
-from preprocess import preprocess_data, Data
+from preprocess import PreprocessedData, Data
 from model import Model
 import numpy as np
 from bert4keras.backend import keras
@@ -11,8 +12,12 @@ from bert4keras.tokenizers import Tokenizer
 from bert4keras.snippets import sequence_padding, DataGenerator
 from sklearn.metrics import classification_report
 from bert4keras.optimizers import Adam
-from keras.losses import binary_crossentropy
-from preprocess import PreprocessedData
+from keras.losses import binary_crossentropy, sparse_categorical_crossentropy
+from pathlib import Path
+import re
+from tensorflow.keras.metrics import Accuracy, Precision, Recall
+from sklearn.metrics import accuracy_score
+from tools import evaluation_func, getThreshold, transform_prediction_to_json
 set_gelu('tanh')
 
 def textcnn(inputs,kernel_initializer):
@@ -84,8 +89,8 @@ def build_bert_model(config_path, checkpoint_path):
 		)(concat_features)
 
 	output = keras.layers.Dense(
-			units=1,
-			activation='sigmoid',
+			units=2,
+			activation='softmax',
 			kernel_initializer=bert.initializer
 		)(dense)
 
@@ -124,20 +129,24 @@ class myBert(Model):
 		:param kwargs: save_path, load_path
 		:return:
 		"""
-		self.model.load_weights(kwargs['load_path'])
-		train_, valid_ = self.process_data(train_data, valid_data)
+		if Path(kwargs['load_path']).exists():
+			self.model.load_weights(kwargs['load_path'])
+		print("loading model ")
+		train_ = self.process_data(train_data)
+		valid_ = self.process_data(valid_data)
 		train_generator = data_generator(train_, kwargs['batch_size'])
 		valid_generator = data_generator(valid_, kwargs['batch_size'])
 		self.model.compile(
 			# loss='sparse_categorical_crossentropy',
-			loss=binary_crossentropy,
+			# loss=binary_crossentropy,
+			loss = sparse_categorical_crossentropy,
 			optimizer=Adam(5e-6),
-			metrics=['accuracy'],
+			metrics=[Accuracy(), Precision(), Recall()],
 		)
 
 		earlystop = keras.callbacks.EarlyStopping(
 			monitor='val_loss',
-			patience=3,
+			patience=5,
 			verbose=2,
 			mode='min'
 		)
@@ -160,40 +169,74 @@ class myBert(Model):
 			callbacks=[earlystop, checkpoint]
 		)
 
-	def score(self, data: Data):
-		pass
-
-
+	def score(self, data: Data, **kwargs):
+		self.model.load_weights(kwargs['load_path'])
+		data_ = self.process_data(data)
+		d_generator = data_generator(data_, kwargs['batch_size'])
+		scores = []
+		for x, y in d_generator:
+			scores.extend(self.model.predict(x))
+		return np.array(scores).flatten()
 
 	@staticmethod
-	def process_data(train_data: Data, valid_data: Data):
+	def process_data(train_data: Data):
 		targets = np.array(train_data.targets)
 		titles = np.array(train_data.titles)
+		contents = np.array(train_data.contents)
 		# print(targets.shape, titles.shape)
-		train_ = np.hstack((titles[:, np.newaxis], targets[:, np.newaxis]))
+		titles_contents = np.array([(t+'[SEP]'+c)[:512] for t, c in zip(titles, contents)])
+		# print(titles_contents)
+		# abstracts = np.array(train_data.abstracts)
+		# train_ = np.hstack((titles_contents[:, np.newaxis], targets[:, np.newaxis]))
+		train_ = [(i, j) for i, j in zip(titles_contents, targets)]
 
-		test_targets = np.array(valid_data.targets)
-		test_titles = np.array(valid_data.titles)
-		test_ = np.hstack((test_titles[:, np.newaxis], test_targets[:, np.newaxis]))
-		return train_, test_
+		# test_targets = np.array(valid_data.targets)
+		# test_titles = np.array(valid_data.titles)
+		# test_contents = np.array(valid_data.contents)
+		# test_titles_contents = np.array([(t + '[SEP]' + c)[:768] for t, c in zip(test_titles, test_contents)])
+		# test_ = np.hstack((test_titles_contents[:, np.newaxis], test_targets[:, np.newaxis]))
+		return train_
+
+def pre_tokenize(text):
+	"""单独识别出[xxx]的片段
+	"""
+	tokens, start = [], 0
+	for r in re.finditer('\[[^\[]+\]', text):
+		tokens.append(text[start:r.start()])
+		tokens.append(text[r.start():r.end()])
+		start = r.end()
+	if text[start:]:
+		tokens.append(text[start:])
+	return tokens
 
 if __name__ == '__main__':
-	config_path= 'chinese_L-12_H-768_A-12/bert_config.json'
-	checkpoint_path='chinese_L-12_H-768_A-12/bert_model.ckpt'
-	dict_path = 'chinese_L-12_H-768_A-12/vocab.txt'
+	os.environ["CUDA_VISIBLE_DEVICES"]="1"
 
-	load_path = '../weights/bert_.h5'
-	save_path = '../weights/bert_.h5'
+	config_path= '../chinese_L-12_H-768_A-12/bert_config.json'
+	checkpoint_path='../chinese_L-12_H-768_A-12/bert_model.ckpt'
+	dict_path = '../chinese_L-12_H-768_A-12/vocab.txt'
+
+	load_path = '../weights/bert_t_c_multi_1.h5'
+	save_path = '../weights/bert_t_c_multi_1.h5'
 
 	bert = build_bert_model(config_path, checkpoint_path)
 	model = myBert(bert)
 
-	tokenizer, maxlen = Tokenizer(dict_path), 256
+	tokenizer, maxlen = Tokenizer(dict_path, pre_tokenize=pre_tokenize), 256
+	batch_size = 2
 
 	preprocess_data = PreprocessedData()
-	model.train(preprocess_data.train_data, preprocess_data.valid_data, load_path=load_path, save_path=save_path)
+	model.train(preprocess_data.train_data, preprocess_data.valid_data, load_path=load_path, save_path=save_path, batch_size=batch_size)
+	scores = model.score(preprocess_data.valid_data, load_path=load_path, batch_size=batch_size)
+	preds = np.zeros_like(scores)
+	ys = preprocess_data.valid_data.targets
+	threshold = getThreshold([[p, t] for p, t in zip(scores, ys)])
+	preds[scores>threshold] = 1
+	evaluation_func(ys, preds)
 
-
-
-
-
+	test_pre_data = PreprocessedData(path = '/home/cza/ccks/Data/val.unlabel.json', mode='test')
+	test_scores = model.score(test_pre_data.data, load_path=load_path, batch_size=batch_size)
+	test_preds = np.zeros_like(test_scores)
+	test_preds[test_scores>threshold] = 1
+	print(test_preds)
+	transform_prediction_to_json(predictions=test_preds, urls=test_pre_data.data.urls, output_path='result.txt')

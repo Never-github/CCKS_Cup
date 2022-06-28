@@ -1,5 +1,5 @@
 import json
-
+import pandas as pd
 import numpy as np
 import logging
 
@@ -7,16 +7,18 @@ import logging
 # logger = logging.Logger()
 
 class Data:
-    def __init__(self, titles, contents, triples, statistics, targets=None):
+    def __init__(self, urls, titles, contents, triples, statistics, abstracts, targets=None):
+        self.urls = urls
         self.titles = titles
         self.contents = contents
         self.triples = triples
         self.statistics = statistics
+        self.abstracts = abstracts
         self.targets = targets
 
 
 class PreprocessedData:
-    def __init__(self, path='Data/train.json', mode='train', seed=42):
+    def __init__(self, path='/home/cza/ccks/Data/train.json', mode='train', seed=42):
         self.path = path
         self.mode = mode
         self.seed = seed  # make sure train_val_split correct
@@ -42,7 +44,11 @@ class PreprocessedData:
         :return: contents: list
         """
         contents = []
-        pass
+        with open(self.path, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                data_ = json.loads(line)
+                contents.append(data_['content'])
         return contents
 
     def get_statistic_data(self):
@@ -78,14 +84,36 @@ class PreprocessedData:
             lines = f.readlines()
             for line in lines:
                 data_ = json.loads(line)
-                targets.append(data_['label'])
+                targets.append(int(data_['label']))
         return targets
+
+    def get_abstract(self):
+        """
+
+        :return:
+        """
+
+        abstracts = []
+        df = pd.read_csv("/home/cza/ccks/Data/train.tsv", sep="\t")['abstract']
+        for ab in df:
+            abstracts.append(ab)
+        return abstracts
+
+    def get_urls(self):
+        urls = []
+        with open(self.path, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                data_ = json.loads(line)
+                urls.append(data_['url'])
+        return urls
 
     def fit(self):
         """
-
         :return: (titles, contents, triples, statistics) or Nothing
         """
+        urls = self.get_urls()
+        print("prepare url complete")
         titles = self.get_title_data()
         print('prepare title complete')
         contents = self.get_content_data()
@@ -94,11 +122,13 @@ class PreprocessedData:
         print('prepare triple complete')
         statistics = self.get_statistic_data()
         print('prepare statistic complete')
+        abstracts = self.get_abstract()
+        print('prepare abstract complete')
         if self.mode.lower() == 'train':
             targets = self.get_target()
-            return titles, contents, triples, statistics, targets
         else:
-            return titles, contents, triples, statistics
+            targets = np.ones_like(urls)
+        return urls, titles, contents, triples, statistics, abstracts, targets
 
 
     @staticmethod
@@ -127,7 +157,11 @@ if __name__=="__main__":
     with open('Data/train.json', 'r') as f:
         lines = f.readlines()
         for line in lines:
+            print("*"*10)
             data_ = json.loads(line)
-            print(data_['entities'])
-            titles.append(data_.keys())
+            entities = data_['entities']
+            content = data_['content']
+            for k, v in entities.items():
+                print(k, v)
+            print("*"*10)
             break

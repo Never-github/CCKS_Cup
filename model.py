@@ -13,14 +13,15 @@ class Model:
         raise NotImplementedError
 
     def predict(self, data: Data, threshold):
-        scores = self.score(data)
-        predictions = []
-        for i in range(len(scores)):
-            if scores[i]<threshold:
-                predictions.append(0)
-            else:
-                predictions.append(1)
-        return predictions
+        raise NotImplementedError
+        # scores = self.score(data)
+        # predictions = []
+        # for i in range(len(scores)):
+        #     if scores[i]<threshold:
+        #         predictions.append(0)
+        #     else:
+        #         predictions.append(1)
+        # return predictions
 
     def get_best_threshold(self, data: Data):
         assert data.targets
