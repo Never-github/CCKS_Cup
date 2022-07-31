@@ -1,0 +1,35 @@
+path: ../weights/bert_t_a, max_len: 512, batch_size: 8, acc: 0.8035714285714286, p: 0.7490909090909091, r: 0.7079037800687286, f1: 0.7279151943462898 
+path: ../weights/bert_t_a, max_len: 512, batch_size: 8, acc: 0.8035714285714286, p: 0.7490909090909091, r: 0.7079037800687286, f1: 0.7279151943462898 
+path: ../weights/bert_t_a, max_len: 512, batch_size: 8, acc: 0.8035714285714286, p: 0.7490909090909091, r: 0.7079037800687286, f1: 0.7279151943462898 
+path: ../weights/bert_t_a, max_len: 512, batch_size: 8, acc: 0.8035714285714286, p: 0.7490909090909091, r: 0.7079037800687286, f1: 0.7279151943462898 
+path: ../weights/bert_t_c_head_tail, max_len: 425, batch_size: 4, acc: 0.7130102040816326, p: 0.6513761467889908, r: 0.4879725085910653, f1: 0.5579567779960707 
+path: ../weights/bert_t_c_head_tail, max_len: 425, batch_size: 4, acc: 0.7372448979591837, p: 0.7202072538860104, r: 0.47766323024054985, f1: 0.5743801652892563 
+path: ../weights/bert_t_c_head_tail, max_len: 425, batch_size: 4, acc: 0.7372448979591837, p: 0.7202072538860104, r: 0.47766323024054985, f1: 0.5743801652892563 
+path: ../weights/bert_t_c_head_tail, max_len: 425, batch_size: 4, acc: 0.7079081632653061, p: 0.6666666666666666, r: 0.4261168384879725, f1: 0.5199161425576521 
+path: ../weights/bert_t_c_head_tail, max_len: 425, batch_size: 4, acc: 0.7346938775510204, p: 0.6276923076923077, r: 0.7010309278350515, f1: 0.6623376623376623 
+path: ../weights/bert_t_c_head_tail, max_len: 425, batch_size: 4, acc: 0.7436224489795918, p: 0.667910447761194, r: 0.6151202749140894, f1: 0.6404293381037568 
+model/home/cza/ccks/models/lstm.py ,path: ../weights/lstm, acc: 0.8099489795918368, p: 0.8413461538461539, r: 0.6013745704467354, f1: 0.7014028056112225 
+model/home/cza/ccks/models/lstm.py ,path: ../weights/lstm, acc: 0.8125, p: 0.7727272727272727, r: 0.7010309278350515, f1: 0.7351351351351351 
+model/home/cza/ccks/models/lstm.py ,path: ../weights/lstm, acc: 0.8125, p: 0.7727272727272727, r: 0.7010309278350515, f1: 0.7351351351351351 
+model/home/cza/ccks/models/lstm.py ,path: ../weights/lstm, acc: 0.8214285714285714, p: 0.7559322033898305, r: 0.7663230240549829, f1: 0.7610921501706485 
+model/home/cza/ccks/models/lstm.py ,path: ../weights/lstm, acc: 0.7385204081632653, p: 0.6327160493827161, r: 0.7044673539518901, f1: 0.6666666666666667 
+modelbert.py ,path: ../weights/bert_sub_tc, max_len: 420, batch_size: 6, acc: 0.7857142857142857, p: 0.7016393442622951, r: 0.7353951890034365, f1: 0.7181208053691275 
+model/home/cza/ccks/models/bert.py ,path: ../weights/bert_sub_tc, max_len: 420, batch_size: 6, acc: 0.7857142857142857, p: 0.7016393442622951, r: 0.7353951890034365, f1: 0.7181208053691275 
+modelbert.py ,path: ../weights/bert_sub_t_bas, max_len: 420, batch_size: 6, acc: 0.7946428571428571, p: 0.751937984496124, r: 0.6666666666666666, f1: 0.7067395264116575 
+modelbert.py ,path: ../weights/bert_sub_tc_468, max_len: 468, batch_size: 4, acc: 0.7908163265306123, p: 0.7243816254416962, r: 0.7044673539518901, f1: 0.7142857142857144 
+modelbert.py ,path: ../weights/bert_sub_tc_468, max_len: 468, batch_size: 4, acc: 0.7908163265306123, p: 0.7243816254416962, r: 0.7044673539518901, f1: 0.7142857142857144 
+modelbert.py ,path: ../weights/bert_sub_tc_256_SEP, max_len: 336, batch_size: 8, acc: 0.7933673469387755, p: 0.7142857142857143, r: 0.738831615120275, f1: 0.7263513513513513 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata, max_len: 420, batch_size: 6, acc: 0.8596938775510204, p: 0.8006644518272426, r: 0.8281786941580757, f1: 0.8141891891891893 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata, max_len: 420, batch_size: 6, acc: 0.8686224489795918, p: 0.8133333333333334, r: 0.8384879725085911, f1: 0.8257191201353637 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata, max_len: 420, batch_size: 6, acc: 0.8061224489795918, p: 0.7473309608540926, r: 0.7216494845360825, f1: 0.7342657342657342 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata_epoch2, max_len: 420, batch_size: 6, acc: 0.8405612244897959, p: 0.7626582278481012, r: 0.8281786941580757, f1: 0.7940691927512356 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata_epoch1, max_len: 420, batch_size: 6, acc: 0.8035714285714286, p: 0.7472924187725631, r: 0.711340206185567, f1: 0.7288732394366197 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata_epoch2, max_len: 420, batch_size: 6, acc: 0.8405612244897959, p: 0.7561728395061729, r: 0.8419243986254296, f1: 0.7967479674796747 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata_epoch3, max_len: 420, batch_size: 6, acc: 0.8660714285714286, p: 0.7870370370370371, r: 0.8762886597938144, f1: 0.8292682926829268 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata_epoch2, max_len: 420, batch_size: 6, acc: 0.8494897959183674, p: 0.7597597597597597, r: 0.8694158075601375, f1: 0.8108974358974358 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata_epoch2, max_len: 420, batch_size: 6, acc: 0.7844387755102041, p: 0.7019867549668874, r: 0.7285223367697594, f1: 0.7150084317032039 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata_epoch2, max_len: 420, batch_size: 6, acc: 0.7844387755102041, p: 0.7019867549668874, r: 0.7285223367697594, f1: 0.7150084317032039 
+modelbert.py ,path: ../weights/bert_sub_tc_420_alldata_epoch2, max_len: 420, batch_size: 6, acc: 0.7844387755102041, p: 0.7019867549668874, r: 0.7285223367697594, f1: 0.7150084317032039 
+modelbert.py ,path: ../weights/bert_sub_tc_420_train_val_epoch2, max_len: 420, batch_size: 6, acc: 0.8090619017230376, p: 0.7497337593184239, r: 0.727523251808474, f1: 0.7384615384615385 
+modelbert.py ,path: ../weights/bert_sub_tc_420_train_val_except_true_val, max_len: 420, batch_size: 6, acc: 0.8312699425654116, p: 0.781617385108657, r: 0.7557698932139166, f1: 0.7684763572679509 
+modelbert.py ,path: ../weights/bert_sub_tc_420_train_all_val_val, max_len: 420, batch_size: 6, acc: 0.8449266113592853, p: 0.799290780141844, r: 0.776438167413021, f1: 0.7876987593919272 

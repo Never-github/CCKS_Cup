@@ -1,5 +1,7 @@
 #! -*- coding: utf-8 -*-
 import os
+import random
+
 from bert4keras.backend import keras, set_gelu
 from bert4keras.models import build_transformer_model
 import sys
@@ -11,13 +13,13 @@ from bert4keras.backend import keras
 from bert4keras.tokenizers import Tokenizer
 from bert4keras.snippets import sequence_padding, DataGenerator
 from sklearn.metrics import classification_report
-from bert4keras.optimizers import Adam
+from bert4keras.optimizers import Adam, extend_with_piecewise_linear_lr
 from keras.losses import binary_crossentropy, sparse_categorical_crossentropy
 from pathlib import Path
 import re
+import pickle
 from tensorflow.keras.metrics import Accuracy, Precision, Recall
-from sklearn.metrics import accuracy_score
-from tools import evaluation_func, getThreshold, transform_prediction_to_json
+from tools import evaluation_func, getThreshold, transform_prediction_to_json, fbeta_score
 set_gelu('tanh')
 
 def textcnn(inputs,kernel_initializer):
@@ -89,10 +91,11 @@ def build_bert_model(config_path, checkpoint_path):
 		)(concat_features)
 
 	output = keras.layers.Dense(
-			units=2,
-			activation='softmax',
+			units=1,
+			activation='sigmoid',
 			kernel_initializer=bert.initializer
 		)(dense)
+	# output = keras.layers.Softmax(axis=-1)(output)
 
 	model = keras.models.Model(bert.model.input,output)
 
@@ -131,22 +134,34 @@ class myBert(Model):
 		"""
 		if Path(kwargs['load_path']).exists():
 			self.model.load_weights(kwargs['load_path'])
-		print("loading model ")
+			print("loading model ")
+			print("loading model ")
+			print("loading model ")
 		train_ = self.process_data(train_data)
 		valid_ = self.process_data(valid_data)
+		train_val_ = np.vstack((train_, valid_))
+		# true_valid = self.process_data(kwargs['true_valid_data'])
 		train_generator = data_generator(train_, kwargs['batch_size'])
 		valid_generator = data_generator(valid_, kwargs['batch_size'])
+		train_val_generator = data_generator(train_val_, kwargs['batch_size'])
+		# true_valid_generator = data_generator(true_valid, kwargs['batch_size'])
+		AdamLR = extend_with_piecewise_linear_lr(Adam, name='AdamLR')
 		self.model.compile(
 			# loss='sparse_categorical_crossentropy',
-			# loss=binary_crossentropy,
-			loss = sparse_categorical_crossentropy,
-			optimizer=Adam(5e-6),
-			metrics=[Accuracy(), Precision(), Recall()],
+			loss=binary_crossentropy,
+			# loss = sparse_categorical_crossentropy,
+			optimizer=Adam(1e-5),
+			# optimizer=AdamLR(learning_rate=1e-5, lr_schedule={
+			# 	1000: 1,
+			# 	2000: 0.1
+			# }),
+			# optimizer=Adam(lr=5e-6),
+			metrics=[Accuracy(), Precision(), Recall(), fbeta_score],
 		)
 
 		earlystop = keras.callbacks.EarlyStopping(
 			monitor='val_loss',
-			patience=5,
+			patience=3,
 			verbose=2,
 			mode='min'
 		)
@@ -160,13 +175,13 @@ class myBert(Model):
 		)
 
 		self.model.fit_generator(
-			train_generator.forfit(),
+			train_val_generator.forfit(),
 			steps_per_epoch=len(train_generator),
-			epochs=100,
+			epochs=1,
 			validation_data=valid_generator.forfit(),
 			validation_steps=len(valid_generator),
 			shuffle=True,
-			callbacks=[earlystop, checkpoint]
+			callbacks=[earlystop, checkpoint],
 		)
 
 	def score(self, data: Data, **kwargs):
@@ -184,11 +199,16 @@ class myBert(Model):
 		titles = np.array(train_data.titles)
 		contents = np.array(train_data.contents)
 		# print(targets.shape, titles.shape)
-		titles_contents = np.array([(t+'[SEP]'+c)[:512] for t, c in zip(titles, contents)])
+		contents_head = np.array([c for c in contents])
+		# contents_tail = np.array([c[-128:] for c in contents])
+
+		titles_contents = np.array([t+'[SEP]'+c_h for t, c_h in zip(titles, contents_head)])
 		# print(titles_contents)
-		# abstracts = np.array(train_data.abstracts)
-		# train_ = np.hstack((titles_contents[:, np.newaxis], targets[:, np.newaxis]))
-		train_ = [(i, j) for i, j in zip(titles_contents, targets)]
+		#abstracts = np.array(train_data.abstracts)
+		#titles_abstracts = np.array([(t+c) for t, c in zip(titles, abstracts)])
+
+		train_ = np.hstack((titles_contents[:, np.newaxis], targets[:, np.newaxis]))
+		# train_ = [(i, j) for i, j in zip(titles_abstracts, targets)]
 
 		# test_targets = np.array(valid_data.targets)
 		# test_titles = np.array(valid_data.titles)
@@ -210,33 +230,46 @@ def pre_tokenize(text):
 	return tokens
 
 if __name__ == '__main__':
-	os.environ["CUDA_VISIBLE_DEVICES"]="1"
+	os.environ["CUDA_VISIBLE_DEVICES"]="0"
 
 	config_path= '../chinese_L-12_H-768_A-12/bert_config.json'
 	checkpoint_path='../chinese_L-12_H-768_A-12/bert_model.ckpt'
 	dict_path = '../chinese_L-12_H-768_A-12/vocab.txt'
 
-	load_path = '../weights/bert_t_c_multi_1.h5'
-	save_path = '../weights/bert_t_c_multi_1.h5'
+	load_path = '../weights/bert_sub_tc_all_ep1'
+	save_path = '../weights/bert_sub_tc_all_ep1'
 
 	bert = build_bert_model(config_path, checkpoint_path)
 	model = myBert(bert)
 
-	tokenizer, maxlen = Tokenizer(dict_path, pre_tokenize=pre_tokenize), 256
-	batch_size = 2
+	tokenizer, maxlen = Tokenizer(dict_path, pre_tokenize=pre_tokenize), 420
+	batch_size = 6
 
-	preprocess_data = PreprocessedData()
-	model.train(preprocess_data.train_data, preprocess_data.valid_data, load_path=load_path, save_path=save_path, batch_size=batch_size)
-	scores = model.score(preprocess_data.valid_data, load_path=load_path, batch_size=batch_size)
-	preds = np.zeros_like(scores)
-	ys = preprocess_data.valid_data.targets
-	threshold = getThreshold([[p, t] for p, t in zip(scores, ys)])
-	preds[scores>threshold] = 1
-	evaluation_func(ys, preds)
+	# train bert
+	train_preprocess_data = PreprocessedData()
+	valid_preprocess_data = PreprocessedData(path='/home/cza/ccks/Data/val.unlabel.json', mode='valid')
+	model.train(train_preprocess_data.train_data, train_preprocess_data.valid_data, load_path=load_path, save_path=save_path, batch_size=batch_size)
+	# scores = model.score(preprocess_data.data, load_path=load_path, batch_size=batch_size)
+	# with open('train_bert_pred.pkl', 'wb') as f:
+	# 	pickle.dump(scores, f)
 
-	test_pre_data = PreprocessedData(path = '/home/cza/ccks/Data/val.unlabel.json', mode='test')
+	# valid data evaluation
+	valid_scores = model.score(train_preprocess_data.valid_data, load_path=load_path, batch_size=batch_size)
+	valid_preds = np.zeros_like(valid_scores)
+	valid_ys = train_preprocess_data.valid_data.targets
+	threshold = getThreshold([[p, t] for p, t in zip(valid_scores, valid_ys)])
+	threshold = 0.5
+	valid_preds[valid_scores>threshold] = 1
+	acc, p, r, f1 = evaluation_func(valid_ys, valid_preds)
+	with open('log.txt', 'a') as f:
+		info = f'model{__file__} ,path: {save_path}, max_len: {maxlen}, batch_size: {batch_size}, acc: {acc}, p: {p}, r: {r}, f1: {f1} \n'
+		f.writelines(info)
+
+	# test_data
+	test_pre_data = PreprocessedData(path = '/home/cza/ccks/Data/test.unlabel.json', mode='test')
 	test_scores = model.score(test_pre_data.data, load_path=load_path, batch_size=batch_size)
 	test_preds = np.zeros_like(test_scores)
 	test_preds[test_scores>threshold] = 1
-	print(test_preds)
+	with open('test_bert_pred.pkl', 'wb') as f:
+		pickle.dump(test_preds, f)
 	transform_prediction_to_json(predictions=test_preds, urls=test_pre_data.data.urls, output_path='result.txt')
