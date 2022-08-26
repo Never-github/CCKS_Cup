@@ -23,5 +23,7 @@ fuse the two models to perform better
 
 ##  Learning with Knowledge Graph Guided Attention
 another form of knowledge graph enhanced language model
+
 a new learning strategy
+
 coming soon...
