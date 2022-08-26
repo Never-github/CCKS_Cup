@@ -9,6 +9,7 @@ easily get training and testing data through preprocess.py
 
 ### text
 BERT+TextCNN: title+content
+
 implemented in models/bert.py
 
 ### knowledge graph
@@ -20,6 +21,7 @@ implemented in models/lstm.py
 
 ### final
 both the above two methods can obtain considerable performance.
+
 fuse the two models to perform better
 
 
