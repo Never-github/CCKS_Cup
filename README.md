@@ -13,7 +13,9 @@ implemented in models/bert.py
 
 ### knowledge graph
 train embeddings for entities with representation learning: TransE and ComplEx
+
 a BiLSTM model is applied to finetune the embeddings
+
 implemented in models/lstm.py
 
 ### final
